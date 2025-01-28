@@ -22,6 +22,14 @@ namespace NeuroSpeech.EntityAccessControl
     }
 
 
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public class ExternalMethodAttribute : Attribute
+    {
+
+    }
+
+
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
     public class CompositeKeyAttribute: Attribute
     {

@@ -18,6 +18,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Linq.Expressions;
 using NeuroSpeech.EntityAccessControl.Extensions;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace NeuroSpeech.EntityAccessControl
 {
@@ -228,6 +229,42 @@ import { ICollection, IGeometry, IModel, Model } from ""@web-atoms/entity/dist/s
                     eae.ErrorModel.Add("Stack", eae.StackTrace);
                 return this.UnprocessableEntity(eae.ErrorModel);
             }
+        }
+
+        [HttpPost("invoke/{entityName}/{methodName}")]
+        public async Task<IActionResult> Invoke(
+            [FromRoute] string entityName,
+            [FromRoute] string methodName,
+            [FromBody] JsonElement body,
+            CancellationToken cancellationToken
+            )
+        {
+            var et = FindEntityType(entityName);
+            var iet = db.GetEntityEvents(et.ClrType);
+
+            var entity = body.GetProperty("entity");
+            var args = body.GetProperty("args");
+
+            var e1 = await db.FindByKeysAsync(et, body, cancellationToken);
+
+            if (e1 == null)
+            {
+                throw new EntityAccessException("Entity not found");
+            }
+
+            var r = await DbEntityMethodInvoker.CallMethod(db, methodName, e1, args);
+
+            if (r == null)
+            {
+                return Json(null);
+            }
+
+            if (r is IActionResult ar)
+            {
+                return ar;
+            }
+
+            return Serialize(r);
         }
 
 

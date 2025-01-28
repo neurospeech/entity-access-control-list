@@ -13,6 +13,19 @@ using System.Text.Json;
 namespace NeuroSpeech.EntityAccessControl
 {
 
+    public class QueryParameters
+    {
+        private readonly JsonElement args;
+
+        public QueryParameters(JsonElement args)
+        {
+            this.args = args;
+        }
+
+
+
+    }
+
     public readonly struct QueryParameter: IEnumerable<object>
     {
         private readonly JsonElement element;

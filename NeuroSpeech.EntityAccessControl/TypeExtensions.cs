@@ -469,6 +469,17 @@ namespace NeuroSpeech.EntityAccessControl.Internal
             return method(p1, p2, p3);
         }
 
+        public static T InvokeAs<T1, T2, T3, T4, T>(Type type, Type type2, Func<T1, T2, T3, T4, T> fx, T1 p1, T2 p2, T3 p3, T4 p4)
+        {
+            var method = TypedGet(
+                    (type, type2, fx.Method),
+                    (k) => k.method
+                        .GetGenericMethodDefinition()
+                        .MakeGenericMethod(k.type1, k.type2)
+                        .CreateTypedDelegate<Func<T1, T2, T3, T4, T>>());
+            return method(p1, p2, p3, p4);
+        }
+
         public static T InvokeAs<Target, T>(this Target target, Type type, Func<T> fx)
         {
             var method = TypedGet(
@@ -707,6 +718,22 @@ namespace NeuroSpeech.EntityAccessControl.Internal
         {
             var r = await task;
             return r;
+        }
+
+        public static async Task<object?> GetResultAsObject(this Task task)
+        {
+            var t = task.GetType();
+            if (t.IsConstructedGenericType)
+            {
+                return await (Task<object?>)Generic.InvokeAs(t.GetFirstGenericArgument(), GetResultFrom<object>, task);
+            }
+            await task;
+            return null;
+        }
+
+        private static async Task<object?> GetResultFrom<T>(Task task)
+        {
+            return await (task as Task<T>)!;
         }
     }
 }
